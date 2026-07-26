@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+data/uploads/*
+data/outputs/*
+!data/uploads/sales.csv
+!data/outputs/.gitkeep
+.ipynb_checkpoints/
+uv.lock
