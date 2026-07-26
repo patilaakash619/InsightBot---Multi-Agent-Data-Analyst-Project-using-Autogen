@@ -3,21 +3,24 @@ from autogen import ConversableAgent
 from autogen.coding import LocalCommandLineCodeExecutor
 
 from insightbot.config.llm_config import llm_config
-from insightbot.config.settings import DATA_DIR, USE_DOCKER
+from insightbot.config.settings import DATA_DIR, USE_DOCKER, HITL
+
 
 
 def build_agents():
     planner = ConversableAgent(
-        "planner",
-        system_message=(
-            "You are a data-analysis planner. Read the user's question and the "
-            "CSV summary, then produce a SHORT numbered plan (max 4 steps) for "
-            "the coder. Do NOT write code yourself."
-        ),
-        llm_config=llm_config,
-        human_input_mode="NEVER",
-        description="Creates the step-by-step analysis plan. Call this agent FIRST.",
-    )
+            "planner",
+            system_message=(
+                "You are a data-analysis planner.\n"
+                "STEP 1: Call the load_csv_summary tool with the CSV file name to "
+                "inspect the data (use list_datasets if the file name is unknown).\n"
+                "STEP 2: After seeing the summary, produce a SHORT numbered plan "
+                "(max 4 steps) for the coder. Do NOT write code yourself."
+            ),
+            llm_config=llm_config,
+            human_input_mode="NEVER",
+            description="Inspects the data via tools, then creates the analysis plan. Call FIRST.",
+        )
 
     coder = ConversableAgent(
         "coder",
@@ -45,12 +48,12 @@ def build_agents():
         executor = LocalCommandLineCodeExecutor(timeout=60, work_dir=str(DATA_DIR))
 
     executor_agent = ConversableAgent(
-        "executor_agent",
-        llm_config=False,                       # runs code only, no LLM
-        code_execution_config={"executor": executor},
-        human_input_mode="NEVER",
-        description="Executes the coder's python code and returns the output.",
-    )
+            "executor_agent",
+            llm_config=False,
+            code_execution_config={"executor": executor},
+            human_input_mode="ALWAYS" if HITL else "NEVER",   # <-- Ch. 3 pattern
+            description="Executes the coder's python code and returns the output.",
+        )
 
     reviewer = ConversableAgent(
         "reviewer",

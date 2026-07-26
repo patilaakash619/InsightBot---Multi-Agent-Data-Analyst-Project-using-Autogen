@@ -1,0 +1,37 @@
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the 'sales.csv' file into a pandas DataFrame
+def load_data(file_name):
+    try:
+        data = pd.read_csv(f'uploads/{file_name}')
+        return data
+    except Exception as e:
+        print(f"Failed to load data: {e}")
+
+# Group the data by 'region' and calculate the total revenue for each region
+def calculate_revenue_by_region(data):
+    revenue_by_region = data.groupby('region')['revenue'].sum().reset_index()
+    return revenue_by_region
+
+# Plot a bar chart of revenue by region
+def plot_revenue_by_region(revenue_by_region):
+    plt.figure(figsize=(10,6))
+    plt.bar(revenue_by_region['region'], revenue_by_region['revenue'])
+    plt.xlabel('Region')
+    plt.ylabel('Revenue')
+    plt.title('Revenue by Region')
+    plt.savefig('outputs/revenue_by_region.png')
+
+# Main function
+def main():
+    data = load_data('sales.csv')
+    revenue_by_region = calculate_revenue_by_region(data)
+    print(revenue_by_region)
+    max_revenue_region = revenue_by_region.loc[revenue_by_region['revenue'].idxmax()]['region']
+    print(f"The region with the highest revenue is: {max_revenue_region}")
+    plot_revenue_by_region(revenue_by_region)
+
+if __name__ == "__main__":
+    main()

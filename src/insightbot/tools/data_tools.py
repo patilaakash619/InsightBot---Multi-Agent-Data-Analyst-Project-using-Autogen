@@ -1,13 +1,22 @@
-"""Plain functions for now; in Week 3 you will register these as agent tools."""
+"""Data tools - registered with agents via register_function (Chapter 6 pattern)."""
 import pandas as pd
+from typing import Annotated
 from insightbot.config.settings import UPLOADS_DIR
 
 
-def load_csv_summary(file_name: str) -> str:
+def list_datasets() -> str:
+    """List all CSV files available in the uploads folder."""
+    files = sorted(p.name for p in UPLOADS_DIR.glob("*.csv"))
+    return "Available datasets: " + ", ".join(files) if files else "No CSV files found."
+
+
+def load_csv_summary(
+    file_name: Annotated[str, "Name of the CSV file inside the uploads folder, e.g. 'sales.csv'"]
+) -> str:
     """Return schema + sample rows + stats of a CSV so agents understand the data."""
     path = UPLOADS_DIR / file_name
     if not path.exists():
-        return f"ERROR: {file_name} not found in {UPLOADS_DIR}"
+        return f"ERROR: {file_name} not found. {list_datasets()}"
     df = pd.read_csv(path)
     return (
         f"FILE: uploads/{file_name}\n"

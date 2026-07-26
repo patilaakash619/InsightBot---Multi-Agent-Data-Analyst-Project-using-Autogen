@@ -14,3 +14,4 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
 USE_DOCKER = os.getenv("USE_DOCKER", "false").lower() == "true"
+HITL = os.getenv("HITL", "true").lower() == "true"
