@@ -8,3 +8,4 @@ data/outputs/*
 !data/outputs/.gitkeep
 .ipynb_checkpoints/
 uv.lock
+.cache/
