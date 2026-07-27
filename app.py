@@ -21,6 +21,8 @@ h1, h2, h3 { font-family: 'Space Grotesk', sans-serif !important; letter-spacing
 div.stButton > button { background: #E8B44C; color: #0B1220; font-weight: 700; border: none; width: 100%; }
 div.stButton > button:hover { background: #F2C766; color: #0B1220; }
 [data-testid="stSidebar"] { border-right: 1px solid #223050; }
+[data-testid="stImage"] img { max-height: 34vh; object-fit: contain;
+  border: 1px solid #223050; border-radius: 6px; background: #0E1526; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,17 +83,21 @@ tab_result, tab_data, tab_history = st.tabs(["📈 Analysis", "🗂 Data preview
 with tab_result:
     if st.session_state.history:
         latest = st.session_state.history[0]
-        left, right = st.columns([1, 1.2], gap="large")
-        with left:
-            st.subheader("Answer")
-            st.caption(f"“{latest['question']}”  ·  {latest['duration']}")
-            st.write(latest["answer"])
-        with right:
-            if latest["charts"]:
-                for c in latest["charts"]:
-                    st.image(c, use_container_width=True)
-            else:
-                st.info("No chart was generated for this question.")
+
+        # compact answer strip on top
+        st.caption(f"“{latest['question']}”  ·  {latest['duration']}")
+        st.markdown(f"**{latest['answer']}**")
+        st.write("")
+
+        # charts in a 2-up grid, all visible at once
+        charts = latest["charts"]
+        if charts:
+            for i in range(0, len(charts), 2):
+                cols = st.columns(2, gap="medium")
+                for col, chart in zip(cols, charts[i:i+2]):
+                    col.image(chart, use_container_width=True)
+        else:
+            st.info("No chart was generated for this question.")
     else:
         st.info("Pick a dataset, type a question in the sidebar, and press Run analysis.")
 
