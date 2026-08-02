@@ -40,10 +40,16 @@ with st.sidebar:
     csv_files = sorted(p.name for p in UPLOADS_DIR.glob("*.csv"))
     csv_name = st.selectbox("Dataset", csv_files)
 
-    question = st.text_area("Question", height=100,
-        value="Which region has the highest revenue? Plot revenue by region.")
-    run = st.button("▶ Run analysis")
-    st.caption("Agent conversation streams in the terminal.")
+    # question = st.text_area("Question", height=100,
+    #     value="Which region has the highest revenue? Plot revenue by region.")
+    # run = st.button("▶ Run analysis")
+    # st.caption("Agent conversation streams in the terminal.")
+    
+    question = st.text_area(
+        "Question", height=100, value="",
+        placeholder="e.g. Which category has the highest total? Plot it.",
+    )
+    run = st.button("▶ Run analysis", disabled=not question.strip())
 
 # ---------- header ----------
 st.title("InsightBot Terminal")
@@ -52,16 +58,26 @@ st.markdown('<div class="pipeline">PIPELINE&nbsp;&nbsp; PLANNER ▸ TOOLS ▸ <b
 st.write("")
 
 # ---------- KPI row (dataset stats) ----------
+# if csv_name:
+#     df = pd.read_csv(UPLOADS_DIR / csv_name)
+#     num_cols = df.select_dtypes("number").columns
+#     k1, k2, k3, k4 = st.columns(4)
+#     k1.metric("Dataset", csv_name)
+#     k2.metric("Rows", f"{len(df):,}")
+#     k3.metric("Columns", f"{df.shape[1]}")
+#     if len(num_cols):
+#         main = num_cols[-1]
+#         k4.metric(f"Total {main}", f"{df[main].sum():,.0f}")
+
+# ---------- KPI row (dataset facts, schema-agnostic) ----------
+# ---------- KPI row (dataset facts, schema-agnostic) ----------
 if csv_name:
     df = pd.read_csv(UPLOADS_DIR / csv_name)
-    num_cols = df.select_dtypes("number").columns
-    k1, k2, k3, k4 = st.columns(4)
+    k1, k2, k3 = st.columns(3)
     k1.metric("Dataset", csv_name)
     k2.metric("Rows", f"{len(df):,}")
-    k3.metric("Columns", f"{df.shape[1]}")
-    if len(num_cols):
-        main = num_cols[-1]
-        k4.metric(f"Total {main}", f"{df[main].sum():,.0f}")
+    k3.metric("Numeric / Text cols",
+              f"{df.select_dtypes('number').shape[1]} / {df.select_dtypes(exclude='number').shape[1]}")
 
 st.divider()
 
