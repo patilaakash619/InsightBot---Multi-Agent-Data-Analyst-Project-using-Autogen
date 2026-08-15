@@ -87,7 +87,14 @@ if run and csv_name:
     with st.spinner("Agent team working..."):
         answer = run_analysis(question, csv_name)
     charts = [p for p in OUTPUTS_DIR.glob("*.png") if p.stat().st_mtime >= start]
+    # st.session_state.history.insert(0, {
+    #     "question": question, "answer": answer,
+    #     "charts": [str(c) for c in sorted(charts)],
+    #     "duration": f"{time.time() - start:.0f}s",
+    # })
+    
     st.session_state.history.insert(0, {
+        "dataset": csv_name,
         "question": question, "answer": answer,
         "charts": [str(c) for c in sorted(charts)],
         "duration": f"{time.time() - start:.0f}s",
@@ -121,9 +128,33 @@ with tab_data:
     if csv_name:
         st.dataframe(df, use_container_width=True, height=380)
 
+# with tab_history:
+#     for i, h in enumerate(st.session_state.history):
+#         with st.expander(f"{h['question']}  ·  {h['duration']}"):
+#             st.write(h["answer"])
+#             for c in h["charts"]:
+#                 st.image(c, width=520)
+
 with tab_history:
-    for i, h in enumerate(st.session_state.history):
-        with st.expander(f"{h['question']}  ·  {h['duration']}"):
-            st.write(h["answer"])
-            for c in h["charts"]:
-                st.image(c, width=520)
+    if not st.session_state.history:
+        st.info("No runs yet.")
+    else:
+        # preserve first-seen order of datasets (most recent dataset used appears first
+        # naturally, since history is newest-first)
+        seen = []
+        for h in st.session_state.history:
+            ds = h.get("dataset", "unknown")
+            if ds not in seen:
+                seen.append(ds)
+
+        ds_tabs = st.tabs([f"🗂 {ds}" for ds in seen])
+
+        for ds, ds_tab in zip(seen, ds_tabs):
+            with ds_tab:
+                entries = [h for h in st.session_state.history if h.get("dataset", "unknown") == ds]
+                st.caption(f"{len(entries)} question{'s' if len(entries) != 1 else ''} asked on this dataset")
+                for h in entries:
+                    with st.expander(f"{h['question']}  ·  {h['duration']}"):
+                        st.write(h["answer"])
+                        for c in h["charts"]:
+                            st.image(c, width=520)
