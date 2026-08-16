@@ -55,22 +55,55 @@ def build_agents():
             description="Executes the coder's python code and returns the output.",
         )
 
+    # reviewer = ConversableAgent(
+    #     "reviewer",
+    #     system_message=(
+    #         "You are a strict reviewer. You NEVER write code yourself.\n"
+    #         "Look at the most recent message from executor_agent:\n"
+    #         "- If exitcode is 0 AND the user's question is answered AND charts "
+    #         "were saved: write a short summary of the findings (with chart "
+    #         "filenames) and end with TERMINATE.\n"
+    #         "- If exitcode is non-zero (failed): describe the error cause in "
+    #         "2-3 sentences addressed to the coder, and DO NOT say TERMINATE. "
+    #         "The coder will send corrected code.\n"
+    #         "Rule: you may only say TERMINATE right after a SUCCESSFUL execution."
+    #     ),
+    #     llm_config=llm_config,
+    #     human_input_mode="NEVER",
+    #     description="Reviews execution results. Summarizes on success; on failure, explains the error so the coder can fix it.",
+    # )
+
+
     reviewer = ConversableAgent(
         "reviewer",
         system_message=(
-            "You are a strict reviewer. You NEVER write code yourself.\n"
-            "Look at the most recent message from executor_agent:\n"
-            "- If exitcode is 0 AND the user's question is answered AND charts "
-            "were saved: write a short summary of the findings (with chart "
-            "filenames) and end with TERMINATE.\n"
-            "- If exitcode is non-zero (failed): describe the error cause in "
-            "2-3 sentences addressed to the coder, and DO NOT say TERMINATE. "
-            "The coder will send corrected code.\n"
-            "Rule: you may only say TERMINATE right after a SUCCESSFUL execution."
+            "You are a strict reviewer. You NEVER write code and you NEVER "
+            "say TERMINATE - only the Verifier can end the conversation.\n"
+            "- If exitcode is 0 and the question is answered: write a short "
+            "summary of the findings (with chart filenames) and hand off.\n"
+            "- If exitcode is non-zero: describe the error for the coder to fix."
         ),
         llm_config=llm_config,
         human_input_mode="NEVER",
-        description="Reviews execution results. Summarizes on success; on failure, explains the error so the coder can fix it.",
+        description="Reviews execution results and summarizes findings for the Verifier to check.",
     )
+    
+    verifier = ConversableAgent(
+        "verifier",
+        system_message=(
+            "You are an independent verifier. NEVER trust the Reviewer's claims "
+            "blindly. Call the recompute_aggregates tool to get ground-truth "
+            "numbers computed directly from the raw CSV.\n"
+            "Compare those numbers to the Reviewer's summary:\n"
+            "- If they match (or the question wasn't a groupby-aggregate type, "
+            "e.g. a single-column stat): confirm and end with TERMINATE.\n"
+            "- If they clearly disagree: explain the discrepancy in 2-3 sentences "
+            "to the coder and do NOT say TERMINATE.\n"
+            "Rule: only YOU may say TERMINATE."
+        ),
+        llm_config=llm_config,
+        human_input_mode="NEVER",
+        description="Independently re-checks the reviewer's numbers against the raw data before ending.",
+    )   
 
-    return planner, coder, executor_agent, reviewer
+    return planner, coder, executor_agent, reviewer, verifier
