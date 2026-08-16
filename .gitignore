@@ -11,3 +11,4 @@ uv.lock
 .cache/
 data/tmp_code_*.py
 data/Import*
+.python-version
